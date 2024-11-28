@@ -11,19 +11,18 @@ export default function App() {
   const [alert1, setAlert1] = useState(false);
   const [alert2, setAlert2] = useState(false);
 
-  const onMessage = () => {
+  const onMessage = async () => {
 
     setAlert1(false);
     setAlert2(false);
 
+
     if (taskTitle !== "" && taskDescription.length >= 10) {
+
+      let newTask = await postRequest(taskTitle,taskDescription);
+     
       setTask([
-        ...task,
-        {
-          id: task.length + 1,
-          title: taskTitle,
-          description: taskDescription
-        }
+        (newTask)
       ])
 
       setTaskTitle("");
@@ -46,11 +45,12 @@ export default function App() {
     }
   }
 
-  const deleteTask = (index) => {
-    const updateTasks = [...task];
+  const deleteTask = (index,id) => {
+    const updateTasks = [...tasks];
     updateTasks.splice(index, 1)
+    deleteRequest(id);
     setTask(updateTasks);
-  }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -113,11 +113,12 @@ export default function App() {
           task.map((item, index) => (
 
             <TaskCard
+              key={item.id}
               title={item.title}
               desc={item.description}
               status={"Done"}
               onclick={() => {
-                deleteTask();
+                deleteTask(index,item.id);
               }} />
           ))}
       </ScrollView>
@@ -169,3 +170,55 @@ const styles = StyleSheet.create({
     fontStyle: "italic"
   }
 }); 
+export const postRequest = async (title, desc) => {
+  try {
+    let body = {
+      id:0,
+      title:title,
+      description:desc
+    };
+    const response = await fetch (BASE_URL,{
+      method: 'POST',
+      hesaders:{
+        "Content-Type":"application/json"
+      },
+      body: mybody
+    });
+    if (!response.ok){
+      throw new Error("Post request failed!!!")
+    }
+    const textData = await response.text ();
+    return JSON.parse(textData);
+
+  }catch (error){
+    console.error(error);
+    throw error;
+}
+};
+
+export const deleteRequest = async(id) =>{
+  try{
+    const reponse = await fetch (`${BASE_URL}/${id}`,{
+      method:"DELETE ",
+      headers:{
+        "Content-Type":"text/plain",
+
+      },
+    
+    });
+
+    if (!response.ok){
+      throw new Error("Delete request failed !!!");
+
+    }
+  }catch (error){
+    console.error(error);
+    throw error;
+}
+};
+    
+      
+
+      
+  
+
